@@ -8,29 +8,28 @@ The initiative behind `unio` is to describe REST APIs in a simple, readable JSON
 
 #Usage
 
-`
-$unio = new Unio();
-$params = [
-    'q': 'coffee',
-    'access_token': 'YOUR_FB_ACCESS_TOKEN'
-];
 
-// with the facebook search API
-$unio
-	->use('fb')
-	->get('search', params, function (err, reply) {
-		// first search result
-        	var_dump(reply[0]);
-	});
-
-// add a new REST API spec to unio
-$unio
-	->spec(apiSpec)
-	->use('newly-added-spec')
-	->post('some_resource', function (err, reply) {
+	$unio = new Unio();
+	$params = [
+	    'q': 'coffee',
+	    'access_token': 'YOUR_FB_ACCESS_TOKEN'
+	];
 	
-	});
-`
+	// with the facebook search API
+	$unio
+		->use('fb')
+		->get('search', params, function (err, reply) {
+			// first search result
+	        	var_dump(reply[0]);
+		});
+	
+	// add a new REST API spec to unio
+	$unio
+		->spec(apiSpec)
+		->use('newly-added-spec')
+		->post('some_resource', function (err, reply) {
+		
+		});
 
 #API:
 
