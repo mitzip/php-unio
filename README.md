@@ -8,7 +8,8 @@ The initiative behind `unio` is to describe REST APIs in a simple, readable JSON
 
 #Usage
 
-`$unio = new Unio();
+`
+$unio = new Unio();
 $params = [
     'q': 'coffee',
     'access_token': 'YOUR_FB_ACCESS_TOKEN'
