@@ -1,80 +1,63 @@
-#unio
+#php-unio
 
-`One REST API Spec for All.`
+`One REST API Spec for All.` - **for PHP**
 
-This repo is the `Unio` REST API client - it implements the **Facebook** APIs, and supports any REST API that can be described in JSON.
+This repo is a port of the `Unio` REST API client - it implements the **Facebook** APIs, and supports any REST API that can be described in JSON.
 
 The initiative behind `unio` is to describe REST APIs in a simple, readable JSON file. This allows it to be trivially implemented by the `unio` client - making the implementation time for new REST APIs as close to **zero** as possible. See [the blog post](http://ttezel.github.com) motivating this client, and feel free to fork and add new REST API specs!
 
-#Install
-
-```
-npm install unio
-```
-
 #Usage
 
-```javascript
-var unio = require('unio')
-
-var params = {
-    q: 'coffee',
-    access_token: 'YOUR_FB_ACCESS_TOKEN'
-}
+```$unio = new Unio();
+$params = [
+    'q': 'coffee',
+    'access_token': 'YOUR_FB_ACCESS_TOKEN'
+];
 
 // with the facebook search API
-unio()
-    .use('fb')
-    .get('search', params, function (err, reply) {
-        console.log('first search result', reply.data[0])
-    })
+$unio
+	->use('fb')
+	->get('search', params, function (err, reply) {
+		// first search result
+        	var_dump(reply[0]);
+	});
 
 // add a new REST API spec to unio
-unio()
-    .spec(apiSpec)
-    .use('newly-added-spec')
-    .post('some_resource', function (err, reply) {
-        //...
-    })
-
+$unio
+	->spec(apiSpec)
+	->use('newly-added-spec')
+	->post('some_resource', function (err, reply) {
+	
+	});
 ```
 
 #API:
 
-##`.use(service)`
+##`->use(service)`
 
 Tells the `unio` client that the next HTTP request you make will be to `service`.
 
-##`.spec(specObject)`
+##`->spec(specObject)`
     
 Adds a new REST API spec, described by `specObject`, to the `unio` client. Allows it the `use` it and make `get`, `post`, `put`, and `delete` requests to the REST API described by `specObject`.
 
 See the [Facebook JSON spec](https://github.com/ttezel/unio/blob/master/specs/fb.json) and the [Twitter JSON spec](https://github.com/ttezel/unio/blob/master/specs/twitter.json) as examples. The specs that `unio` supports are in the `specs` folder.
 
-##`.get(resource, [ params, callback ])`
+##`->get(resource, [ params, callback ])`
 
 **GET** a REST API `resource`, with optional params object (which will get url-encoded for you), and an optional `callback`, that has the following signature: `function (err, reply)`.
 
-##`.post(resource, [ params, callback ])`
+##`->post(resource, [ params, callback ])`
 
-See `.get()` -> same thing but using **POST**.
+See `->get()` -> same thing but using **POST**.
 
-##`.put(resource, [ params, callback ])`
+##`->put(resource, [ params, callback ])`
 
-See `.get()` -> same thing but using **PUT**.
+See `->get()` -> same thing but using **PUT**.
 
-##`.delete(resource, [ params, callback ])`
+##`->delete(resource, [ params, callback ])`
 
-See `.get()` -> same thing but using **DELETE**.
-
-
--------
-
-## Running the tests
-
-```
-npm test
-```
+See `->get()` -> same thing but using **DELETE**.
 
 -------
 
@@ -82,6 +65,7 @@ npm test
 
 (The MIT License)
 
+Copyright (c) by David Mitchel <github@mitzip.com>
 Copyright (c) by Tolga Tezel <tolgatezel11@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
