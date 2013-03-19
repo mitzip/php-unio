@@ -1,65 +1,276 @@
-#php-unio
+#`unio`
+=======
 
-`One REST API Spec for All.` - **for PHP**
+##One REST API Client for All. **for PHP**
 
-This repo is a port of the `Unio` REST API client - it implements the **Facebook** APIs, and supports any REST API that can be described in JSON.
+The `Unio` client is an easily-extensible REST API Client that supports any REST API that can be described in JSON.
 
-The initiative behind `unio` is to describe REST APIs in a simple, readable JSON file. This allows it to be trivially implemented by the `unio` client - making the implementation time for new REST APIs as close to **zero** as possible. See [the blog post](http://ttezel.github.com) motivating this client, and feel free to fork and add new REST API specs!
+The initiative behind `unio` is to describe REST APIs in a simple, readable JSON format. This allows them to be imported into `unio`, and it will know automatically how to talk to the web service from the JSON spec. You can simply import the spec, and start making requests to the API right away. This makes it easy for you to test, use and reuse REST APIs by saving you the time of writing an API client for every new service that pops up.
+
+Currently, the APIs implemented out-of-the-box with `unio` are:
+
+* **Facebook**
+* **Twitter**
+* **Github**
+* **StackExchange**
+
+Feel free to fork and add new REST API specs!
+
 
 #Usage
 
+=======
+```javascript
+var unio = require('unio')
 
-	$unio = new Unio();
-	$params = [
-	    'q': 'coffee',
-	    'access_token': 'YOUR_FB_ACCESS_TOKEN'
-	];
-	
-	// with the facebook search API
-	$unio
-		->use('fb')
-		->get('search', params, function (err, reply) {
-			// first search result
-	        	var_dump(reply[0]);
-		});
-	
-	// add a new REST API spec to unio
-	$unio
-		->spec(apiSpec)
-		->use('newly-added-spec')
-		->post('some_resource', function (err, reply) {
-		
-		});
+var client = unio()
+
+//
+// with the Facebook Search API
+//
+var params = {
+    q: 'coffee',
+    access_token: 'YOUR_FB_ACCESS_TOKEN'
+}
+
+client
+    .use('fb')
+    .get('search', params, function (err, response, body) {
+        console.log('first search result', body.data[0])
+    })
+
+//
+// with the Twitter Search API
+//
+client
+    .use('twitter')
+    .get('search', { q: 'banana' }, function (err, response, body) {
+        console.log('search results:', body)
+    })
+
+//
+// use the Twitter REST API to post a tweet
+//
+var params = {
+    status: 'tweeting using unio! :)',
+    oauth: {
+        consumer_key:       '...',
+        consumer_secret:    '...',
+        token:              '...',
+        token_secret:       '...',
+    }
+}
+
+client
+    .use('twitter')
+    .post('statuses/update', params, function (err, res, body) {
+        //...
+    })
+
+//
+// with the Github API
+//
+client
+    .use('github')
+    .get('user', { access_token: 'ACCESS-TOKEN' }, function (err, res, body) {
+        //...
+    })
+
+//
+// import a JSON spec from the local filesystem
+//
+client
+    .spec('./path/to/json/file')
+    .use('myspec')
+    .post('blah', function (err, res, body) {
+        //...
+    })
+
+//
+// add a new spec
+//
+var apiSpec = {
+    name: 'api-name',
+    api_root: 'http://api.something.com',
+    resources: [
+        {
+            path: 'some/resource',
+            methods: [ 'post' ],
+            params: {
+                foo: 'required',
+                bar: 'optional'
+            }
+        },
+        // other resource entries here...
+    ]
+}
+
+client
+    .spec(apiSpec)
+    .use('api-name')
+    .post('some/resource', { foo: 123 }, function (err, res, body) {
+        //...
+    })
 
 #API:
 
-##`->use(service)`
+##`->use(name)`
 
-Tells the `unio` client that the next HTTP request you make will be to `service`.
+Tells `unio` that the next request you make will be to the API whose spec has the name `name`. If you don't call **.use()** before making a request, it will default to the last API that you called **.use()** with.
 
-##`->spec(specObject)`
+##`->spec(spec)`
     
-Adds a new REST API spec, described by `specObject`, to the `unio` client. Allows it the `use` it and make `get`, `post`, `put`, and `delete` requests to the REST API described by `specObject`.
+Adds a new REST API spec to the `unio` client. `Spec` can be:
 
-See the [Facebook JSON spec](https://github.com/ttezel/unio/blob/master/specs/fb.json) and the [Twitter JSON spec](https://github.com/ttezel/unio/blob/master/specs/twitter.json) as examples. The specs that `unio` supports are in the `specs` folder.
+* an **Object** representing an API specification
+* an **Array** of API specifications
+* a **String** that is a path to a JSON file
+
+The specs that `unio` currently supports out-of-the-box are in the **specs** folder. See the [Facebook spec](https://github.com/ttezel/unio/blob/master/specs/fb.json) and the [Twitter spec](https://github.com/ttezel/unio/blob/master/specs/twitter.json) as examples. 
 
 ##`->get(resource, [ params, callback ])`
 
-**GET** a REST API `resource`, with optional params object (which will get url-encoded for you), and an optional `callback`, that has the following signature: `function (err, reply)`.
+**GET** an API `resource`, with optional `params` object for the request, and an optional `callback` that looks like: `function (err, response, body) { ... }`.
 
 ##`->post(resource, [ params, callback ])`
 
-See `->get()` -> same thing but using **POST**.
+Same usage as **->get()**, but sends a **POST** request.
+
+##`->patch(resource, [ params, callback ])`
+
+Same usage as **->get()**, but sends a **PATCH** request.
 
 ##`->put(resource, [ params, callback ])`
 
-See `->get()` -> same thing but using **PUT**.
+Same usage as **->get()**, but sends a **PUT** request.
+
+##`->delete(resource, [ params, callback ])`
+
+Same usage as **->get()**, but sends a **DELETE** request.
+
+
+##Defining a Unio Spec
+
+`unio` is intended to make it as easy/painless as possible to talk to HTTP APIs.
+Here's an example of what a spec looks like:
+
+```javascript
+{
+    name: 'some-api',
+    api_root: 'http://api.something.com',
+    resources: [
+        {
+            path: 'users/:id',
+            methods: [ 'get', 'put' ],
+            params: {
+                id: 'required'
+            }
+        },
+        {
+            path: 'notes',
+            methods: [ 'post' ],
+            params: {
+                title: 'required',
+                text: 'required',
+                tags: 'optional'
+            }
+        }, 
+        {
+            name: 'friends',
+            path: 'friends.json',
+            methods: [ 'post' ],
+            params: {
+                id: 'required'
+            }
+        }  
+        // other resource entries here...
+    ]
+}
+```
+
+###`name` (String)
+
+Each `unio` spec must have a `name`. This allows you to **.use()** the spec and start making requests.
+
+###`api_root` (String)
+
+The `api_root` specifies the root url where the API resources are located.
+
+###`resources` (Array)
+
+Array of API resources.
+
+##Defining a Resource
+
+Each object in the `resources` array represents a REST API resource. For example, a `GET user` resource taking three optional parameters (id, name, and location) would look like this:
+```javascript
+{
+    path: 'user',
+    methods: [ 'get' ],
+    params: {
+        id: 'optional',
+        name: 'optional',
+        location: 'optional'
+    }
+}
+```
+
+Each of the resource keys are described below:
+
+####`path` (String)
+
+URI where the resource is located, without a leading slash (e.g. **posts/newest**) or a full URL (e.g. https://api.bar.com).
+
+####`name` (String)
+
+**Optional** name of the resource. When you make a request with unio, for example with `.get(resource, ...)`, you can specify the resource by its `name` value rather than by its `path`. Think of it like an alias `path` value for the resource.
+
+E.g. If the following resource is specified:
+
+```javascript
+{
+    name: 'statuses/update',
+    path: 'statuses/update.json',
+    methods: [ 'post' ],
+    params: {
+        foo: 'required'
+    }
+}
+```
+
+You can then request the resource by specifying its **name** OR its **path**:
+
+```javascript
+// GET a resource by specifying its `name`
+unio()
+    .use('...')
+    .get('statuses/update', params, callback)
+
+// GET a resource by specifying its `path`
+unio()
+    .use('...')
+    .get('statuses/update.json', params, callback)
+```
+
+####`methods` (Array)
+
+HTTP verbs that may be used to request the resource (allowed: "GET", "POST", "PUT", "DELETE", "PATCH").
+
+####`params` (Object)
+
+Object representing the parameters accepted by the resource. Each parameter must be marked "optional" or "required".
+
+-------
 
 ##`->delete(resource, [ params, callback ])`
 
 See `->get()` -> same thing but using **DELETE**.
 
 -------
+
+# Other Implementations
+
+See [PyUnio](https://github.com/citruspi/PyUnio) by Mihir Singh (@citruspi) for a Python implementation of `unio`.
 
 ## License 
 
